@@ -59,6 +59,11 @@ public class EnumFieldFinder {
         }
     }
     
+    /**
+     * Retrieves the enclosing enum class from an enum constant element.
+     * @param enumConstant The enum constant element.
+     * @return The TypeElement representing the enum class, or null if not found or not a class.
+     */
     private static TypeElement getEnumClassFromConstant(Element enumConstant) {
         TypeElement enumClass = (TypeElement) enumConstant.getEnclosingElement();
         if (enumClass == null || !enumClass.getKind().isClass()) {
@@ -67,11 +72,17 @@ public class EnumFieldFinder {
         return enumClass;
     }
     
+    /**
+     * Finds an instance field by name within an enum class.
+     * @param enumClass The TypeElement representing the enum class.
+     * @param fieldName The name of the field to find.
+     * @return The VariableElement representing the instance field, or null if not found.
+     */
     private static VariableElement findInstanceFieldByName(TypeElement enumClass, String fieldName) {
         for (Element enclosed : enumClass.getEnclosedElements()) {
             if (enclosed.getKind() == ElementKind.FIELD) {
                 VariableElement field = (VariableElement) enclosed;
-                if (field.getSimpleName().contentEquals(fieldName) && 
+                if (field.getSimpleName().contentEquals(fieldName) &&
                     !field.getModifiers().contains(Modifier.STATIC)) {
                     return field;
                 }
@@ -80,6 +91,11 @@ public class EnumFieldFinder {
         return null;
     }
     
+    /**
+     * Finds the constructor of an enum class.
+     * @param enumClass The TypeElement representing the enum class.
+     * @return The ExecutableElement representing the enum constructor, or null if not found.
+     */
     private static ExecutableElement findEnumConstructor(TypeElement enumClass) {
         for (Element element : enumClass.getEnclosedElements()) {
             if (element.getKind() == ElementKind.CONSTRUCTOR) {
@@ -89,6 +105,12 @@ public class EnumFieldFinder {
         return null;
     }
     
+    /**
+     * Finds the index position of a parameter in a constructor by parameter name.
+     * @param constructor The ExecutableElement representing the constructor.
+     * @param parameterName The name of the parameter to find.
+     * @return The index position of the parameter (0-based), or -1 if not found.
+     */
     private static int findParameterIndexByName(ExecutableElement constructor, String parameterName) {
         for (int i = 0; i < constructor.getParameters().size(); i++) {
             if (constructor.getParameters().get(i).getSimpleName().contentEquals(parameterName)) {
@@ -96,5 +118,11 @@ public class EnumFieldFinder {
             }
         }
         return -1;
+    }
+    /**
+     * Private constructor to prevent instantiation of this utility class.
+     */
+    private EnumFieldFinder() {
+        // This is a utility class and should not be instantiated.
     }
 }

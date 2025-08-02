@@ -15,19 +15,31 @@ import javax.lang.model.util.Types;
 import java.util.Set;
 
 /**
- * Annotation processor for validating error codes in enums
- * This processor validates that error codes follow specified format rules
+ * Annotation processor for validating error codes in enums.
+ * This processor validates that error codes follow specified format rules.
+ * <p>
+ * This processor extends {@link AbstractProcessor} and is automatically
+ * registered for processing annotations.
+ * </p>
  */
 @AutoService(Processor.class)
 @SupportedAnnotationTypes("io.github.tcq1007.valid.errorcode.ValidErrorCode")
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class ErrorCodeProcessor extends AbstractProcessor {
     
-    private Messager messager;
-    private Elements elementUtils;
-    private Types typeUtils;
-    private Trees trees;
-
+    private Messager messager; // Messager for reporting errors and warnings
+    private Elements elementUtils; // Utility class for working with program elements
+    private Types typeUtils; // Utility class for working with types
+    private Trees trees; // Utility class for working with AST
+    /**
+     * Constructs a new ErrorCodeProcessor.
+     */
+    public ErrorCodeProcessor() {
+    }
+    /**
+     * Initializes the processor with the processing environment.
+     * @param processingEnv The processing environment.
+     */
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         System.out.println(ErrorMessages.INITIALIZING_PROCESSOR);
@@ -38,6 +50,12 @@ public class ErrorCodeProcessor extends AbstractProcessor {
         this.trees = Trees.instance(processingEnv);
     }
 
+    /**
+     * Processes the annotations found in the source files.
+     * @param annotations The set of annotations to process.
+     * @param roundEnv The current round environment.
+     * @return True if the annotations were processed, false otherwise.
+     */
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         System.out.println(ErrorMessages.PROCESSING_ANNOTATIONS);
@@ -183,22 +201,49 @@ public class ErrorCodeProcessor extends AbstractProcessor {
     /**
      * Configuration class for error code validation
      */
+    /**
+     * Configuration class for error code validation.
+     * This class holds the parameters for validating error codes.
+     */
     private static class ErrorCodeValidationConfig {
-        private final String prefix;
-        private final int totalLength;
-        private final String codeFieldName;
-        private final int[] excludeValues;
-        
+        private final String prefix; // The required prefix for the error code
+        private final int totalLength; // The required total length of the error code
+        private final String codeFieldName; // The name of the field containing the error code
+        private final int[] excludeValues; // Values to exclude from validation
+
+        /**
+         * Constructs an ErrorCodeValidationConfig.
+         * @param prefix The required prefix for the error code.
+         * @param totalLength The required total length of the error code.
+         * @param codeFieldName The name of the field containing the error code.
+         * @param excludeValues Values to exclude from validation.
+         */
         public ErrorCodeValidationConfig(String prefix, int totalLength, String codeFieldName, int[] excludeValues) {
             this.prefix = prefix;
             this.totalLength = totalLength;
             this.codeFieldName = codeFieldName;
             this.excludeValues = excludeValues;
         }
-        
+
+        /**
+         * Returns the prefix.
+         * @return The prefix.
+         */
         public String getPrefix() { return prefix; }
+        /**
+         * Returns the total length.
+         * @return The total length.
+         */
         public int getTotalLength() { return totalLength; }
+        /**
+         * Returns the code field name.
+         * @return The code field name.
+         */
         public String getCodeFieldName() { return codeFieldName; }
+        /**
+         * Returns the exclude values.
+         * @return The exclude values.
+         */
         public int[] getExcludeValues() { return excludeValues; }
     }
 }

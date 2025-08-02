@@ -6,27 +6,50 @@ package io.github.tcq1007.valid.errorcode.constants;
 public final class ErrorMessages {
     
     // Validation error messages
-    public static final String ONLY_ENUM_CLASSES_ALLOWED = 
+    /**
+     * Error message when only enum classes are allowed to use @ValidErrorCode annotation.
+     */
+    public static final String ONLY_ENUM_CLASSES_ALLOWED =
         "Only enum classes can use @ValidErrorCode annotation";
     
-    public static final String ERROR_CODE_FIELD_NOT_FOUND = 
+    /**
+     * Error message when the error code field is not found.
+     */
+    public static final String ERROR_CODE_FIELD_NOT_FOUND =
         "Error code field named '%s' not found";
     
-    public static final String ERROR_CODE_FIELD_MUST_BE_INT = 
+    /**
+     * Error message when the error code field must be of int type.
+     */
+    public static final String ERROR_CODE_FIELD_MUST_BE_INT =
         "Error code field '%s' must be of int type";
     
-    public static final String UNABLE_TO_EXTRACT_ERROR_CODE = 
+    /**
+     * Error message when unable to extract error code value from enum constant.
+     */
+    public static final String UNABLE_TO_EXTRACT_ERROR_CODE =
         "Unable to extract error code value from enum constant '%s', " +
         "please ensure constructor parameters are integer literals";
     
-    public static final String ERROR_CODE_LENGTH_MISMATCH = 
+    /**
+     * Error message when the error code length does not match the expected length.
+     */
+    public static final String ERROR_CODE_LENGTH_MISMATCH =
         "Error code field '%s' length should be %d digits, actual is %d digits (value: %s)";
     
-    public static final String ERROR_CODE_PREFIX_MISMATCH = 
+    /**
+     * Error message when the error code prefix does not match the expected prefix.
+     */
+    public static final String ERROR_CODE_PREFIX_MISMATCH =
         "Error code field '%s' must start with %s, actual is %s (value: %d)";
     
-    // Log messages
+    /**
+     * Log message for initializing the ErrorCodeProcessor.
+     */
     public static final String INITIALIZING_PROCESSOR = "Initializing ErrorCodeProcessor";
+    /**
+     * Log message for processing ErrorCodeProcessor annotations.
+     */
     public static final String PROCESSING_ANNOTATIONS = "Processing ErrorCodeProcessor annotations";
     
     // Prevent instantiation

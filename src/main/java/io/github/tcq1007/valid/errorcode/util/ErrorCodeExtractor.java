@@ -38,6 +38,14 @@ public class ErrorCodeExtractor {
      * Extract error code value using syntax tree analysis
      * This is the most reliable method when available
      */
+    /**
+     * Extracts the error code value using syntax tree analysis.
+     * This is the most reliable method when available.
+     * @param enumConstant The enum constant element.
+     * @param codeFieldName The name of the error code field.
+     * @param trees The Trees instance for syntax tree analysis.
+     * @return The extracted error code value, or null if extraction fails.
+     */
     private static Integer extractFromSyntaxTree(Element enumConstant, String codeFieldName, Trees trees) {
         try {
             TreePath path = trees.getPath(enumConstant);
@@ -87,8 +95,11 @@ public class ErrorCodeExtractor {
     }
     
     /**
-     * Extract error code value from string representation of enum constant
-     * This is a fallback method when syntax tree analysis fails
+     * Extracts the error code value from the string representation of an enum constant.
+     * This is a fallback method when syntax tree analysis fails.
+     * @param enumConstant The enum constant element.
+     * @param codeFieldName The name of the error code field.
+     * @return The extracted error code value, or null if extraction fails.
      */
     private static Integer extractFromSourceString(Element enumConstant, String codeFieldName) {
         try {
@@ -109,8 +120,11 @@ public class ErrorCodeExtractor {
     }
     
     /**
-     * Extract error code using regex pattern matching
-     * Matches patterns like "ENUM_NAME(123, "message")"
+     * Extracts the error code using regex pattern matching.
+     * Matches patterns like "ENUM_NAME(123, "message")".
+     * @param enumConstant The enum constant element.
+     * @param enumConstantStr The string representation of the enum constant.
+     * @return The extracted error code value, or null if extraction fails.
      */
     private static Integer extractUsingRegexPattern(Element enumConstant, String enumConstantStr) {
         try {
@@ -129,7 +143,10 @@ public class ErrorCodeExtractor {
     }
     
     /**
-     * Extract error code based on constructor parameter order
+     * Extracts the error code based on constructor parameter order.
+     * @param enumConstant The enum constant element.
+     * @param codeFieldName The name of the error code field.
+     * @return The extracted error code value, or null if extraction fails.
      */
     private static Integer extractFromConstructorParameterOrder(Element enumConstant, String codeFieldName) {
         try {
@@ -161,5 +178,11 @@ public class ErrorCodeExtractor {
         }
         
         return null;
+    }
+    /**
+     * Private constructor to prevent instantiation of this utility class.
+     */
+    private ErrorCodeExtractor() {
+        // This is a utility class and should not be instantiated.
     }
 }

@@ -1,72 +1,36 @@
 plugins {
     id 'java'
     id 'java-library'       // 基础 Java 库支持
-    id 'maven-publish'      // 处理 Maven 发布
-    id 'signing'            // 用于 GPG 签名（中央仓库必需）
+    id "eu.kakde.gradle.sonatype-maven-central-publisher" version "1.0.6"
 }
 
 group = 'io.github.tcq1007'
 version = '1.0.0'
 
-repositories {
-    mavenCentral()
+ext {
+    COMPONENT_TYPE = "java"
+    GROUP = "io.github.tcq1007"
+    ARTIFACT_ID = "valid-error-code-processor"
+    VERSION = "1.0.0"
+    PUBLISHING_TYPE = "USER_MANAGED"
+    DESC = "A Java library for validating and processing error codes."
+    LICENSE = "Apache-2.0"
+    LICENSE_URL = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+    GITHUB_REPO = "tcq1007/valid-error-code-processor"
+    DEVELOPER_ID = "tcq1007"
+    DEVELOPER_NAME = "tcq1007"
+    DEVELOPER_ORGANIZATION = "io.github.tcq1007"
+    DEVELOPER_ORGANIZATION_URL = "https://github.com/tcq1007"
+    DEVELOPER_EMAIL = "1007281088@qq.com"
 }
 
-publishing {
-    publications {
-        // 定义一个 Maven 发布组件（名称可自定义，通常为 "mavenJava"）
-        mavenJava(MavenPublication) {
-            from components.java  // 关联 Java 组件（编译后的 class 文件）
+// 适用于所有 Java 编译任务
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
 
-            // 基础坐标（必需）
-            groupId = project.group
-            artifactId = project.name
-            version = project.version
-
-            // POM 元数据（中央仓库必需）
-            pom {
-                name = 'Valid Error Code Processor'
-                description = 'A Java library for validating and processing error codes.'
-                url = 'https://github.com/tcq1007/valid-error-code-processor'
-
-                // 许可证信息（必需，需与项目 LICENSE 文件一致）
-                licenses {
-                    license {
-                        name = 'Apache License, Version 2.0'
-                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                        distribution = 'repo'
-                    }
-                }
-
-                // 开发者信息（必需）
-                developers {
-                    developer {
-                        id = 'tcq1007'
-                        name = 'tcq1007'
-                        email = '1007281088@qq.com' // 请替换为你的真实邮箱
-                    }
-                }
-
-                // 源码管理信息（必需，关联代码仓库）
-                scm {
-                    url = 'https://github.com/tcq1007/valid-error-code-processor'
-                    connection = 'scm:git:https://github.com/tcq1007/valid-error-code-processor.git'
-                    developerConnection = 'scm:git:git@github.com:tcq1007/valid-error-code-processor.git'
-                }
-            }
-        }
-    }
-
-    repositories {
-        maven {
-            name = 'ossrh-staging-api'
-            url = 'https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/'
-            credentials {
-                username = findProperty('PUBLISH_USERNAME') ?: System.getenv('PUBLISH_USERNAME')
-                password = findProperty('PUBLISH_PASSWORD') ?: System.getenv('PUBLISH_PASSWORD')
-            }
-        }
-    }
+repositories {
+    mavenCentral()
 }
 
 dependencies {
@@ -77,61 +41,53 @@ dependencies {
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
-
-
 }
 
-// 生成源码包
-task sourcesJar(type: Jar) {
-    from sourceSets.main.allJava
-    archiveClassifier = 'sources'  // 分类器，生成文件名格式：artifact-id-version-sources.jar
-}
 
-// 生成 Javadoc 包
-task javadocJar(type: Jar) {
-    from javadoc                    // 依赖 javadoc 任务生成文档
-    archiveClassifier = 'javadoc'   // 分类器，生成文件名格式：artifact-id-version-javadoc.jar
-}
+sonatypeCentralPublishExtension {
+    // Set group ID, artifact ID, version, and other publication details
+    groupId.set(GROUP)
+    artifactId.set(ARTIFACT_ID)
+    version.set(VERSION)
+    componentType.set(COMPONENT_TYPE)
+    publishingType.set(PUBLISHING_TYPE)
 
-// 将源码包和 Javadoc 包添加到发布组件中
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            // 新增：关联源码包和 Javadoc 包
-            artifact sourcesJar
-            artifact javadocJar
+    // Set username and password for Sonatype repository
+    username.set(System.getenv("SONATYPE_USERNAME") ?: sonatypeUsername)
+    password.set(System.getenv("SONATYPE_PASSWORD") ?: sonatypePassword)
+
+    // Configure POM metadata
+    pom {
+        name.set(ARTIFACT_ID)
+        description.set(DESC)
+        url.set("https://github.com/${GITHUB_REPO}")
+        licenses {
+            license {
+                name.set(LICENSE)
+                url.set(LICENSE_URL)
+            }
+        }
+        developers {
+            developer {
+                id.set(DEVELOPER_ID)
+                name.set(DEVELOPER_NAME)
+                email.set(DEVELOPER_EMAIL)
+                organization.set(DEVELOPER_ORGANIZATION)
+                organizationUrl.set(DEVELOPER_ORGANIZATION_URL)
+            }
+        }
+        scm {
+            url.set("https://github.com/${GITHUB_REPO}")
+            connection.set("scm:git:https://github.com/${GITHUB_REPO}")
+            developerConnection.set("scm:git:https://github.com/${GITHUB_REPO}")
+        }
+        issueManagement {
+            system.set("GitHub")
+            url.set("https://github.com/${GITHUB_REPO}/issues")
         }
     }
 }
 
-signing {
-    // 对 Maven 发布组件进行签名
-    sign publishing.publications.mavenJava
-
-    // 配置 GPG 密钥（推荐通过环境变量或 gradle.properties 注入，避免硬编码）
-    def gpgKeyId = findProperty('gpg.keyId') ?: System.getenv('GPG_KEY_ID')
-    def gpgSecretKeyRingFile = findProperty('gpg.secretKeyRingFile') ?: System.getenv('GPG_SECRET_KEY_RING_FILE')
-    def gpgPassword = findProperty('gpg.password') ?: System.getenv('GPG_PASSWORD')
-
-    if (gpgKeyId != null && !gpgKeyId.isEmpty() && gpgSecretKeyRingFile != null && !gpgSecretKeyRingFile.isEmpty() && gpgPassword != null && !gpgPassword.isEmpty()) {
-        // Read the secret key ring file content
-        def secretKeyContent = new File(gpgSecretKeyRingFile).text
-        useInMemoryPgpKeys(secretKeyContent, gpgPassword)
-    }
-
-}
-
-
-
-
-
-// 优化 Javadoc 生成（避免因注释不规范导致失败）
-javadoc {
-    if (JavaVersion.current().isJava9Compatible()) {
-        options.addBooleanOption('html5', true)  // Java 9+ 支持 HTML5 格式
-    }
-    options.addStringOption('Xdoclint:none', '-quiet')  // 忽略注释检查警告
-}
 
 test {
     useJUnitPlatform()

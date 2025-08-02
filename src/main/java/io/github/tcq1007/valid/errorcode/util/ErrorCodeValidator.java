@@ -87,4 +87,10 @@ public class ErrorCodeValidator {
     public static void reportError(Element element, String message, Messager messager) {
         messager.printMessage(Diagnostic.Kind.ERROR, message, element);
     }
+    /**
+     * Private constructor to prevent instantiation of this utility class.
+     */
+    private ErrorCodeValidator() {
+        // This is a utility class and should not be instantiated.
+    }
 }

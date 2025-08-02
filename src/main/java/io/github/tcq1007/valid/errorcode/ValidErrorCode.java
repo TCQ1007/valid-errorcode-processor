@@ -5,17 +5,36 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-// Custom annotation for marking enums that need error code validation
+/**
+ * Custom annotation for marking enums that need error code validation.
+ * This annotation is used to configure how error codes within an enum should be validated.
+ */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE) // Only retained at source level, not included in bytecode
 public @interface ValidErrorCode {
-    // Configurable prefix, default is 1122
+    /**
+     * Configurable prefix for the error code.
+     * The default value is "1122".
+     * @return The prefix for the error code.
+     */
     String prefix() default "1122";
-    // Configurable total length, default is 8 digits
+    /**
+     * Configurable total length for the error code (in digits).
+     * The default value is 8 digits.
+     * @return The total length of the error code.
+     */
     int length() default 8;
-    // Specify error code field name, default is "code"
+    /**
+     * Specifies the name of the field within the enum constant that holds the error code.
+     * The default value is "code".
+     * @return The name of the error code field.
+     */
     String codeField() default "code";
-    // Excluded values that will skip validation, default excludes 0 (usually represents success/OK)
+    /**
+     * An array of integer values that will skip validation.
+     * By default, it excludes 0 (which usually represents success or OK).
+     * @return An array of values to exclude from validation.
+     */
     int[] excludeValues() default {0};
 }
 
