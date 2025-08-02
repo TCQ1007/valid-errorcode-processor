@@ -1,0 +1,127 @@
+plugins {
+    id 'java'
+    id 'java-library'       // 基础 Java 库支持
+    id 'maven-publish'      // 处理 Maven 发布
+    id 'signing'            // 用于 GPG 签名（中央仓库必需）
+}
+
+group = 'io.github.tcq1007'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+publishing {
+    publications {
+        // 定义一个 Maven 发布组件（名称可自定义，通常为 "mavenJava"）
+        mavenJava(MavenPublication) {
+            from components.java  // 关联 Java 组件（编译后的 class 文件）
+
+            // 基础坐标（必需）
+            groupId = project.group
+            artifactId = project.name
+            version = project.version
+
+            // POM 元数据（中央仓库必需）
+            pom {
+                name = 'Valid Error Code Processor'
+                description = 'A Java library for validating and processing error codes.'
+                url = 'https://github.com/tcq1007/valid-error-code-processor'
+
+                // 许可证信息（必需，需与项目 LICENSE 文件一致）
+                licenses {
+                    license {
+                        name = 'Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution = 'repo'
+                    }
+                }
+
+                // 开发者信息（必需）
+                developers {
+                    developer {
+                        id = 'tcq1007'
+                        name = 'tcq1007'
+                        email = 'tcq1007@example.com' // 请替换为你的真实邮箱
+                    }
+                }
+
+                // 源码管理信息（必需，关联代码仓库）
+                scm {
+                    url = 'https://github.com/tcq1007/valid-error-code-processor'
+                    connection = 'scm:git:https://github.com/tcq1007/valid-error-code-processor.git'
+                    developerConnection = 'scm:git:git@github.com:tcq1007/valid-error-code-processor.git'
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+
+    // 若使用 auto-service 生成服务配置（可选）
+    implementation 'com.google.auto.service:auto-service:1.1.1'
+    annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
+
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+
+
+}
+
+// 生成源码包
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = 'sources'  // 分类器，生成文件名格式：artifact-id-version-sources.jar
+}
+
+// 生成 Javadoc 包
+task javadocJar(type: Jar) {
+    from javadoc                    // 依赖 javadoc 任务生成文档
+    archiveClassifier = 'javadoc'   // 分类器，生成文件名格式：artifact-id-version-javadoc.jar
+}
+
+// 将源码包和 Javadoc 包添加到发布组件中
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            // 新增：关联源码包和 Javadoc 包
+            artifact sourcesJar
+            artifact javadocJar
+        }
+    }
+}
+
+signing {
+    // 对 Maven 发布组件进行签名
+    sign publishing.publications.mavenJava
+
+    // 配置 GPG 密钥（推荐通过环境变量或 gradle.properties 注入，避免硬编码）
+    def gpgKeyId = findProperty('gpg.keyId') ?: System.getenv('GPG_KEY_ID')
+    def gpgSecretKeyRingFile = findProperty('gpg.secretKeyRingFile') ?: System.getenv('GPG_SECRET_KEY_RING_FILE')
+    def gpgPassword = findProperty('gpg.password') ?: System.getenv('GPG_PASSWORD')
+
+    useGpgCmd()  // 使用系统 GPG 命令（需提前安装 GPG）
+    if (gpgKeyId != null && !gpgKeyId.isEmpty() && gpgSecretKeyRingFile != null && !gpgSecretKeyRingFile.isEmpty() && gpgPassword != null && !gpgPassword.isEmpty()) {
+        signing.keyId = gpgKeyId
+        signing.secretKeyRingFile = gpgSecretKeyRingFile
+        signing.password = gpgPassword
+    }
+}
+
+
+
+
+
+// 优化 Javadoc 生成（避免因注释不规范导致失败）
+javadoc {
+    if (JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)  // Java 9+ 支持 HTML5 格式
+    }
+    options.addStringOption('Xdoclint:none', '-quiet')  // 忽略注释检查警告
+}
+
+test {
+    useJUnitPlatform()
+}
