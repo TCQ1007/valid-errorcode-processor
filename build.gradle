@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'io.github.tcq1007'
-version = '1.0.1.01'
+version = '1.0.2'
 
 ext {
     COMPONENT_TYPE = "java"

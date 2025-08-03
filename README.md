@@ -21,7 +21,7 @@
 <dependency>
     <groupId>io.github.tcq1007</groupId>
     <artifactId>valid-error-code-processor</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.2</version>
 </dependency>
 ```
 
@@ -29,7 +29,7 @@
 
 ```groovy
 dependencies {
-    annotationProcessor 'io.github.tcq1007:valid-error-code-processor:1.0.0'
+    annotationProcessor 'io.github.tcq1007:valid-error-code-processor:1.0.2'
 }
 ```
 
