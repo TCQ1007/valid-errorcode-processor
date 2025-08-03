@@ -1,8 +1,8 @@
-# valid-errorcode-processor
+# error-code-processor
 
 一个用于 Java 项目的注解处理器，帮助开发者规范和管理错误码。
 
-## 功能特性
+# 功能特性
 
 - 自动校验错误码的唯一性和规范性
 - 支持自定义错误码前缀和格式
@@ -95,11 +95,12 @@ public enum ErrorCode {
 1. 配置了正确的 GPG 密钥
 2. 设置了必要的环境变量（见配置说明）
 3. 更新了版本号（build.gradle 中的 version）
+4. 在用户目录下
 
 执行发布：
 
 ```bash
-./gradlew jreleaserFullRelease
+./gradlew jreleaserDeploy
 ```
 
 ## License

@@ -15,22 +15,49 @@ import javax.lang.model.util.Types;
 import java.util.Set;
 
 /**
- * Annotation processor for validating error codes in enums.
- * This processor validates that error codes follow specified format rules.
- * <p>
- * This processor extends {@link AbstractProcessor} and is automatically
- * registered for processing annotations.
- * </p>
+ * Annotation processor for validating error codes in enum classes.
+ * 
+ * <p>This processor validates error codes defined in enum classes according to
+ * specified rules including:
+ * <ul>
+ *   <li>Format validation (prefix, length)</li>
+ *   <li>Uniqueness across the codebase</li>
+ *   <li>Type correctness</li>
+ * </ul></p>
+ *
+ * <p>The processor is automatically registered for processing through the
+ * {@link AutoService} annotation and processes all enum classes annotated
+ * with {@link ValidErrorCode}.</p>
+ *
+ * <p>Example usage:
+ * <pre>{@code
+ * @ValidErrorCode(prefix = "E", length = 5)
+ * public enum ErrorCodes {
+ *     E10001("System error"),
+ *     E10002("Invalid input");
+ *     // ...
+ * }
+ * }</pre></p>
+ *
+ * @see ValidErrorCode
+ * @see AbstractProcessor
  */
 @AutoService(Processor.class)
 @SupportedAnnotationTypes("io.github.tcq1007.valid.errorcode.ValidErrorCode")
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class ErrorCodeProcessor extends AbstractProcessor {
 
-    private Messager messager; // Messager for reporting errors and warnings
-    private Elements elementUtils; // Utility class for working with program elements
-    private Types typeUtils; // Utility class for working with types
-    private Trees trees; // Utility class for working with AST
+    /** Messager instance for reporting errors and warnings during processing */
+    private Messager messager;
+
+    /** Utility instance for working with program elements */
+    private Elements elementUtils;
+
+    /** Utility instance for working with types */
+    private Types typeUtils;
+
+    /** Utility instance for working with Abstract Syntax Trees */
+    private Trees trees;
     /**
      * Constructs a new ErrorCodeProcessor.
      * 
@@ -166,22 +193,37 @@ public class ErrorCodeProcessor extends AbstractProcessor {
      * @param config The configuration specifying the validation rules to apply.
      */
     private void validateSingleEnumConstant(Element enumConstant, ErrorCodeValidationConfig config) {
+        // 首先验证字段是否存在且类型正确
         VariableElement codeField = findAndValidateCodeField(enumConstant, config.getCodeField());
         if (codeField == null) {
             return;
         }
 
+        // 获取错误码的值
         Integer codeValue = extractErrorCodeValue(enumConstant, config.getCodeField());
         if (codeValue == null) {
             reportErrorCodeExtractionFailure(enumConstant, config.getCodeField());
             return;
         }
 
+        String errorCode = String.valueOf(codeValue);
+
         if (shouldSkipValidation(codeValue, config.getExcludeValues())) {
             return;
         }
 
-        validateErrorCodeFormat(enumConstant, codeValue, config);
+        // Validate error code format
+        ErrorCodeValidator.validateErrorCodeFormat(
+            enumConstant,
+            codeValue,
+            config.getPrefix(),
+            config.getLength(),
+            config.getCodeField(),
+            messager
+        );
+
+        // Check for error code uniqueness
+        ErrorCodeValidator.validateErrorCodeUniqueness(errorCode, enumConstant, messager);
     }
 
     /**
