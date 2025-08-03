@@ -40,11 +40,16 @@ dependencies {
 在你的错误码枚举或类上使用相关注解。例如：
 
 ```java
-@ValidErrorCode(prefix = "E", description = "通用错误码")
-public enum ErrorCode {
-    E1001("参数错误"),
-    E1002("系统异常");
-    // ...
+@ValidErrorCode
+@Getter
+@AllArgsConstructor
+public enum ApiError {
+   OK(0,"ok"),
+   Error(11223445,"ok"),
+   Error2(11223446,"ok"),
+   ;
+   private final int code;
+   private final String message;
 }
 ```
 
