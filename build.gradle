@@ -1,7 +1,8 @@
 plugins {
-    id 'java'
-    id 'java-library'       // 基础 Java 库支持
-    id "eu.kakde.gradle.sonatype-maven-central-publisher" version "1.0.6"
+//    id 'java'
+    id 'java-library'       // 基础 Java
+    id 'maven-publish'
+    id 'org.jreleaser' version '1.19.0'
 }
 
 group = 'io.github.tcq1007'
@@ -25,8 +26,62 @@ ext {
 }
 
 // 适用于所有 Java 编译任务
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+javadoc {
+    // 关闭所有检查
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = project.group
+            artifactId = project.name
+
+            from components.java
+
+            pom {
+                name = 'app'
+                description = "${DESC}"
+                url = 'https://github.com/tcq1007'
+                inceptionYear = '2025'
+                licenses {
+                    license {
+                        name = 'Apache-2.0'
+                        url = 'https://spdx.org/licenses/Apache-2.0.html'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'tcq1007'
+                        name = 'tcq1007'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/TCQ1007/valid-errorcode-processor.git'
+                    developerConnection = 'scm:git:ssh://github.com/TCQ1007/valid-errorcode-processor.git'
+                    url = 'https://github.com/TCQ1007/valid-errorcode-processor'
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            url = layout.buildDirectory.dir('staging-deploy')
+        }
+    }
 }
 
 repositories {
@@ -43,47 +98,78 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
+jreleaser {
+    signing {
+        active = 'ALWAYS'
+        armored = true
+        mode = 'FILE'
+        publicKey = "./tcq1007_0x6E2301CC_public.asc"
+        secretKey  = "./tcq1007_0x6E2301CC_SECRET.asc"
+    }
+    deploy {
+        maven {
+            mavenCentral {
 
-sonatypeCentralPublishExtension {
-    // Set group ID, artifact ID, version, and other publication details
-    groupId.set(GROUP)
-    artifactId.set(ARTIFACT_ID)
-    version.set(VERSION)
-    componentType.set(COMPONENT_TYPE)
-    publishingType.set(PUBLISHING_TYPE)
+                sonatype {
+                    active = 'ALWAYS'
+                    url = 'https://central.sonatype.com/api/v1/publisher'
+                    stagingRepository('build/staging-deploy')
 
-    // Set username and password for Sonatype repository
-    username.set(System.getenv("SONATYPE_USERNAME") ?: sonatypeUsername)
-    password.set(System.getenv("SONATYPE_PASSWORD") ?: sonatypePassword)
+                    // Activates publication of snapshot artifacts.
+                    // Defaults to `false`.
+                    //
+                    snapshotSupported = false
 
-    // Configure POM metadata
-    pom {
-        name.set(ARTIFACT_ID)
-        description.set(DESC)
-        url.set("https://github.com/${GITHUB_REPO}")
-        licenses {
-            license {
-                name.set(LICENSE)
-                url.set(LICENSE_URL)
+                    // The username required for authorization.
+                    //
+                    username = findProperty('sonatypeUsername')
+
+                    // Password for login into the MAVENCENTRAL service.
+                    //
+                    password = findProperty('sonatypePassword')
+
+                    // The authorization method to use.
+                    // Supported values are [`NONE`, `BASIC`, `BEARER`].
+                    // `Basic` requires both username & password.
+                    // `BEARER` requires a token (set as password).
+                    // Defaults to `BEARER`.
+                    //
+                    authorization = 'BASIC'
+
+                    // Signs artifacts with the configured credentials.
+                    // The Signing section must be configured as well.
+                    // Defaults to `false` unless `applyMavenCentralRules` is set to `true`.
+                    //
+                    sign = true
+
+                    // Checksums all artifacts with `MD5`, `SHA-1`, `SHA-256`, and `SHA-512`.
+                    // Defaults to `false` unless `applyMavenCentralRules` is set to `true`.
+                    //
+                    checksums = true
+
+                    // Verifies that a matching `-sources.jar` artifact is staged.
+                    // Defaults to `false` unless `applyMavenCentralRules` is set to `true`.
+                    //
+                    sourceJar = true
+
+                    // Verifies that a matching `-javadoc.jar` artifact is staged.
+                    // Defaults to `false` unless `applyMavenCentralRules` is set to `true`.
+                    //
+                    javadocJar = true
+
+                    // Verifies that POM files comply with the minimum requirements for publication
+                    // to Maven Central. Checks rules using PomChecker.
+                    // Defaults to `false` unless `applyMavenCentralRules` is set to `true`.
+                    //
+                    verifyPom = true
+
+                    // Verifies pom files, signs all artifacts, verifies that matching `-sources.jar` and
+                    // `-javadoc.jar` artifacts are also staged.
+                    // Defaults to `false`.
+                    //
+                    applyMavenCentralRules = true
+                }
             }
-        }
-        developers {
-            developer {
-                id.set(DEVELOPER_ID)
-                name.set(DEVELOPER_NAME)
-                email.set(DEVELOPER_EMAIL)
-                organization.set(DEVELOPER_ORGANIZATION)
-                organizationUrl.set(DEVELOPER_ORGANIZATION_URL)
-            }
-        }
-        scm {
-            url.set("https://github.com/${GITHUB_REPO}")
-            connection.set("scm:git:https://github.com/${GITHUB_REPO}")
-            developerConnection.set("scm:git:https://github.com/${GITHUB_REPO}")
-        }
-        issueManagement {
-            system.set("GitHub")
-            url.set("https://github.com/${GITHUB_REPO}/issues")
         }
     }
 }

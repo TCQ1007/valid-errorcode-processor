@@ -26,19 +26,29 @@ import java.util.Set;
 @SupportedAnnotationTypes("io.github.tcq1007.valid.errorcode.ValidErrorCode")
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class ErrorCodeProcessor extends AbstractProcessor {
-    
+
     private Messager messager; // Messager for reporting errors and warnings
     private Elements elementUtils; // Utility class for working with program elements
     private Types typeUtils; // Utility class for working with types
     private Trees trees; // Utility class for working with AST
     /**
      * Constructs a new ErrorCodeProcessor.
+     * 
+     * <p>This constructor is required by the annotation processing API and
+     * will be called by the Java compiler when initializing the processor.</p>
      */
     public ErrorCodeProcessor() {
     }
+
     /**
      * Initializes the processor with the processing environment.
-     * @param processingEnv The processing environment.
+     * 
+     * <p>This method is called by the Java compiler to initialize the processor
+     * with the processing environment. It sets up the required utilities for
+     * error reporting, element handling, and AST operations.</p>
+     *
+     * @param processingEnv The processing environment provided by the compiler,
+     *                     containing utilities for the annotation processor.
      */
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -59,30 +69,46 @@ public class ErrorCodeProcessor extends AbstractProcessor {
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         System.out.println(ErrorMessages.PROCESSING_ANNOTATIONS);
-        
+
+        // Clear the error code registry at the start of each round
+        io.github.tcq1007.valid.errorcode.util.ErrorCodeRegistry.clear();
+
         for (Element element : roundEnv.getElementsAnnotatedWith(ValidErrorCode.class)) {
             processAnnotatedEnum(element);
         }
-        
+
         return true;
     }
-    
+
     /**
-     * Process a single enum that is annotated with @ValidErrorCode
+     * Process a single enum that is annotated with @ValidErrorCode.
+     * 
+     * <p>This method handles the validation of a single enum class that has been
+     * annotated with the {@link ValidErrorCode} annotation. It verifies that the
+     * element is a valid enum class and processes all its enum constants.</p>
+     *
+     * @param element The element representing the enum class to be processed.
+     *               Must be annotated with {@link ValidErrorCode}.
      */
     private void processAnnotatedEnum(Element element) {
         if (!isValidEnumElement(element)) {
             return;
         }
-        
+
         ValidErrorCode annotation = element.getAnnotation(ValidErrorCode.class);
         ErrorCodeValidationConfig config = createValidationConfig(annotation);
-        
+
         validateAllEnumConstants(element, config);
     }
-    
+
     /**
-     * Validate that the element is an enum class
+     * Validate that the element is an enum class.
+     * 
+     * <p>This method checks if the given element represents an enum class. If not,
+     * it reports an error using the messager.</p>
+     *
+     * @param element The element to validate.
+     * @return {@code true} if the element is an enum class, {@code false} otherwise.
      */
     private boolean isValidEnumElement(Element element) {
         if (element.getKind() != ElementKind.ENUM) {
@@ -92,21 +118,30 @@ public class ErrorCodeProcessor extends AbstractProcessor {
         }
         return true;
     }
-    
+
     /**
-     * Create validation configuration from annotation
+     * Create validation configuration from annotation.
+     * 
+     * <p>Creates a configuration object based on the values specified in the
+     * {@link ValidErrorCode} annotation. This configuration is used to validate
+     * the error codes in the enum constants.</p>
+     *
+     * @param annotation The ValidErrorCode annotation from which to create the configuration.
+     * @return A new {@link ErrorCodeValidationConfig} instance containing the validation rules.
      */
     private ErrorCodeValidationConfig createValidationConfig(ValidErrorCode annotation) {
-        return new ErrorCodeValidationConfig(
-            annotation.prefix(),
-            annotation.length(),
-            annotation.codeField(),
-            annotation.excludeValues()
-        );
+        return new ErrorCodeValidationConfig(annotation);
     }
-    
+
     /**
-     * Validate all enum constants in the enum class
+     * Validate all enum constants in the enum class.
+     * 
+     * <p>Iterates through all enum constants in the given enum class and validates
+     * each one according to the provided configuration. Only processes elements
+     * that are actually enum constants.</p>
+     *
+     * @param enumElement The enum class element containing the constants to validate.
+     * @param config The configuration specifying the validation rules to apply.
      */
     private void validateAllEnumConstants(Element enumElement, ErrorCodeValidationConfig config) {
         for (Element enumConstant : enumElement.getEnclosedElements()) {
@@ -115,59 +150,95 @@ public class ErrorCodeProcessor extends AbstractProcessor {
             }
         }
     }
-    
+
     /**
-     * Validate a single enum constant
+     * Validate a single enum constant.
+     * 
+     * <p>Performs comprehensive validation of a single enum constant, including:
+     * <ul>
+     *   <li>Finding and validating the error code field</li>
+     *   <li>Extracting the error code value</li>
+     *   <li>Checking if validation should be skipped</li>
+     *   <li>Validating the error code format</li>
+     * </ul></p>
+     *
+     * @param enumConstant The enum constant element to validate.
+     * @param config The configuration specifying the validation rules to apply.
      */
     private void validateSingleEnumConstant(Element enumConstant, ErrorCodeValidationConfig config) {
-        VariableElement codeField = findAndValidateCodeField(enumConstant, config.getCodeFieldName());
+        VariableElement codeField = findAndValidateCodeField(enumConstant, config.getCodeField());
         if (codeField == null) {
             return;
         }
-        
-        Integer codeValue = extractErrorCodeValue(enumConstant, config.getCodeFieldName());
+
+        Integer codeValue = extractErrorCodeValue(enumConstant, config.getCodeField());
         if (codeValue == null) {
-            reportErrorCodeExtractionFailure(enumConstant, config.getCodeFieldName());
+            reportErrorCodeExtractionFailure(enumConstant, config.getCodeField());
             return;
         }
-        
+
         if (shouldSkipValidation(codeValue, config.getExcludeValues())) {
             return;
         }
-        
+
         validateErrorCodeFormat(enumConstant, codeValue, config);
     }
-    
+
     /**
-     * Find and validate the error code field in the enum constant
+     * Find and validate the error code field in the enum constant.
+     * 
+     * <p>Attempts to find the specified field in the enum constant and validates
+     * that it exists and is of the correct type (integer). Reports appropriate
+     * errors if validation fails.</p>
+     *
+     * @param enumConstant The enum constant element to search in.
+     * @param codeFieldName The name of the field to find and validate.
+     * @return The {@link VariableElement} representing the error code field if found
+     *         and valid, {@code null} otherwise.
      */
     private VariableElement findAndValidateCodeField(Element enumConstant, String codeFieldName) {
         VariableElement codeField = EnumFieldFinder.findErrorCodeField(enumConstant, codeFieldName);
-        
+
         if (codeField == null) {
             String errorMessage = String.format(ErrorMessages.ERROR_CODE_FIELD_NOT_FOUND, codeFieldName);
             ErrorCodeValidator.reportError(enumConstant, errorMessage, messager);
             return null;
         }
-        
+
         if (!EnumFieldFinder.isIntegerField(codeField)) {
             String errorMessage = String.format(ErrorMessages.ERROR_CODE_FIELD_MUST_BE_INT, codeFieldName);
             ErrorCodeValidator.reportError(enumConstant, errorMessage, messager);
             return null;
         }
-        
+
         return codeField;
     }
-    
+
     /**
-     * Extract error code value from enum constant
+     * Extract error code value from enum constant.
+     * 
+     * <p>Attempts to extract the numeric error code value from the specified
+     * field in the enum constant. Uses the {@link ErrorCodeExtractor} utility
+     * class to perform the extraction.</p>
+     *
+     * @param enumConstant The enum constant element containing the error code.
+     * @param codeFieldName The name of the field containing the error code.
+     * @return The extracted error code value as an {@link Integer}, or {@code null}
+     *         if extraction fails.
      */
     private Integer extractErrorCodeValue(Element enumConstant, String codeFieldName) {
         return ErrorCodeExtractor.extractErrorCodeValue(enumConstant, codeFieldName, trees);
     }
-    
+
     /**
-     * Report error when error code extraction fails
+     * Report error when error code extraction fails.
+     * 
+     * <p>Reports an error message through the messager when the error code
+     * extraction process fails. The error message includes the name of the
+     * enum constant where the extraction failed.</p>
+     *
+     * @param enumConstant The enum constant element where extraction failed.
+     * @param codeFieldName The name of the field that failed extraction.
      */
     private void reportErrorCodeExtractionFailure(Element enumConstant, String codeFieldName) {
         String errorMessage = String.format(
@@ -176,74 +247,50 @@ public class ErrorCodeProcessor extends AbstractProcessor {
         );
         ErrorCodeValidator.reportError(enumConstant, errorMessage, messager);
     }
-    
+
     /**
-     * Check if validation should be skipped for this value
+     * Check if validation should be skipped for this value.
+     * 
+     * <p>Determines whether a given error code value should be excluded from
+     * validation based on the configured exclude values. Uses the
+     * {@link ErrorCodeValidator} to perform the check.</p>
+     *
+     * @param codeValue The error code value to check.
+     * @param excludeValues Array of values that should be excluded from validation.
+     * @return {@code true} if the value should be excluded from validation,
+     *         {@code false} otherwise.
      */
     private boolean shouldSkipValidation(Integer codeValue, int[] excludeValues) {
         return ErrorCodeValidator.shouldExcludeFromValidation(codeValue, excludeValues);
     }
-    
+
     /**
-     * Validate the format of the error code
+     * Validate the format of the error code.
+     * 
+     * <p>Validates that the error code value meets all format requirements as
+     * specified in the configuration, including:
+     * <ul>
+     *   <li>Correct prefix</li>
+     *   <li>Required length</li>
+     *   <li>Valid numeric format</li>
+     * </ul></p>
+     *
+     * @param enumConstant The enum constant element containing the error code.
+     * @param codeValue The numeric value of the error code to validate.
+     * @param config The configuration containing the validation rules.
      */
     private void validateErrorCodeFormat(Element enumConstant, Integer codeValue, ErrorCodeValidationConfig config) {
         ErrorCodeValidator.validateErrorCodeFormat(
-            enumConstant, 
-            codeValue, 
-            config.getPrefix(), 
-            config.getTotalLength(), 
-            config.getCodeFieldName(), 
+            enumConstant,
+            codeValue,
+            config.getPrefix(),
+            config.getLength(),
+            config.getCodeField(),
             messager
         );
     }
-    
+
     /**
      * Configuration class for error code validation
      */
-    /**
-     * Configuration class for error code validation.
-     * This class holds the parameters for validating error codes.
-     */
-    private static class ErrorCodeValidationConfig {
-        private final String prefix; // The required prefix for the error code
-        private final int totalLength; // The required total length of the error code
-        private final String codeFieldName; // The name of the field containing the error code
-        private final int[] excludeValues; // Values to exclude from validation
-
-        /**
-         * Constructs an ErrorCodeValidationConfig.
-         * @param prefix The required prefix for the error code.
-         * @param totalLength The required total length of the error code.
-         * @param codeFieldName The name of the field containing the error code.
-         * @param excludeValues Values to exclude from validation.
-         */
-        public ErrorCodeValidationConfig(String prefix, int totalLength, String codeFieldName, int[] excludeValues) {
-            this.prefix = prefix;
-            this.totalLength = totalLength;
-            this.codeFieldName = codeFieldName;
-            this.excludeValues = excludeValues;
-        }
-
-        /**
-         * Returns the prefix.
-         * @return The prefix.
-         */
-        public String getPrefix() { return prefix; }
-        /**
-         * Returns the total length.
-         * @return The total length.
-         */
-        public int getTotalLength() { return totalLength; }
-        /**
-         * Returns the code field name.
-         * @return The code field name.
-         */
-        public String getCodeFieldName() { return codeFieldName; }
-        /**
-         * Returns the exclude values.
-         * @return The exclude values.
-         */
-        public int[] getExcludeValues() { return excludeValues; }
-    }
 }

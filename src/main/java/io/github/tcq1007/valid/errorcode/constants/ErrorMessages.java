@@ -17,6 +17,12 @@ public final class ErrorMessages {
      */
     public static final String ERROR_CODE_FIELD_NOT_FOUND =
         "Error code field named '%s' not found";
+        
+    /**
+     * Error message when a duplicate error code is found.
+     */
+    public static final String DUPLICATE_ERROR_CODE =
+        "Duplicate error code '%s' found. Previously defined in %s";
     
     /**
      * Error message when the error code field must be of int type.
@@ -51,6 +57,24 @@ public final class ErrorMessages {
      * Log message for processing ErrorCodeProcessor annotations.
      */
     public static final String PROCESSING_ANNOTATIONS = "Processing ErrorCodeProcessor annotations";
+
+    /**
+     * Error message when the error code format is invalid.
+     */
+    public static final String INVALID_ERROR_CODE_FORMAT = 
+        "Error code in field '%s' must contain only digits";
+
+    /**
+     * Error message when the error code length is invalid.
+     */
+    public static final String INVALID_ERROR_CODE_LENGTH = 
+        "Error code in field '%s' must be exactly %d digits long, but was %d digits";
+
+    /**
+     * Error message when the error code prefix is invalid.
+     */
+    public static final String INVALID_ERROR_CODE_PREFIX = 
+        "Error code in field '%s' must start with prefix '%s'";
     
     // Prevent instantiation
     private ErrorMessages() {
