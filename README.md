@@ -95,14 +95,27 @@ public enum ErrorCode {
 1. 配置了正确的 GPG 密钥
 2. 设置了必要的环境变量（见配置说明）
 3. 更新了版本号（build.gradle 中的 version）
-4. 在用户目录下
+4. 在用户目录下创建 `.jreleaser` 文件夹，并创建 `config.properties` 文件，在文件中配置如下内容
 
-执行发布：
-
+```properties
+JRELEASER_GPG_PASSPHRASE=xxx
+JRELEASER_MAVENCENTRAL_USERNAME=xxx
+JRELEASER_MAVENCENTRAL_PASSWORD=xxx
+# 这一条随便配点东西不然要报错
+JRELEASER_GITHUB_TOKEN=xxx
+```
+5. 先执行gradle的publish 任务再执行发布：
 ```bash
 ./gradlew jreleaserDeploy
 ```
-
+之所以这样是 jrelease任务中配置的 `stagingRepository('build/staging-deploy')` 这个目录是由publish 任务生成的目录和产物文件存放的地方，从 publishing的配置中也可以看出它配置了一个
+```groovy
+repositories {
+   maven {
+      url = layout.buildDirectory.dir('staging-deploy')
+   }
+}
+```
 ## License
 
 本项目基于 Apache License 2.0 协议开源。
