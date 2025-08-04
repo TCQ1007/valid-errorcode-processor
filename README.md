@@ -29,6 +29,7 @@
 
 ```groovy
 dependencies {
+    implementation 'io.github.tcq1007:valid-error-code-processor:1.0.2'
     annotationProcessor 'io.github.tcq1007:valid-error-code-processor:1.0.2'
 }
 ```
@@ -37,10 +38,30 @@ dependencies {
 
 ### 2. 使用注解
 
+```java
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.SOURCE)
+public @interface ValidErrorCode {
+    /**
+     * 你可以配置你的子系统的错误码前缀
+    **/
+    String prefix() default "1122";
+    /**
+     * 你可以配置你的系统规范的错误码长度， 默认8
+    **/
+    int length() default 8;
+    /**
+     * 你可以修改字段名，比如你的枚举的错误码字段叫 errorCode的话，这个字段改为 errorCode
+    **/
+    String codeField() default "code";
+}
+```
+
 在你的错误码枚举或类上使用相关注解。例如：
 
+
 ```java
-@ValidErrorCode
+@ValidErrorCode(prefix = "1122", length = 8)
 @Getter
 @AllArgsConstructor
 public enum ApiError {
@@ -83,7 +104,7 @@ public enum ApiError {
    - [ ] 添加错误码格式验证规则配置
    - [ ] 支持自定义错误码冲突检测策略
 
-## 发布说明
+## 发布说明 -- 以下是我自己记录的发布的步骤，第一次发布到中央仓库以免后续忘记
 
 ### JReleaser
 
