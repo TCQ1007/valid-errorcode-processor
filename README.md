@@ -57,7 +57,7 @@ public @interface ValidErrorCode {
 }
 ```
 
-在你的错误码枚举或类上使用相关注解。例如：
+在你的错误码枚举上使用注解。例如：
 
 
 ```java
